@@ -389,16 +389,23 @@ for(m in 1:length(Pattern1_list)){
 library(shiny)
 library(shinyMatrix)
 library(DT)
+library(leaflet)
+library(sf)
 
+# VA counties - downloaded via the awesome tigris package
+shape <- tigris::counties(state = "VA", class = "sf")
 
-Pattern1<-grep("net_AGI",names(.GlobalEnv),value=TRUE)
+Pattern1<-grep("netflows",names(.GlobalEnv),value=TRUE)
 Pattern1_list<-do.call("list",mget(Pattern1))
 
 
 ui <- fluidPage(
   selectInput("dataset", label = "Dataset", choices = ls(Pattern1_list)),
+  downloadButton("download"),
   verbatimTextOutput("summary"),
-  tableOutput("table")
+  tableOutput("table"),
+
+  
 )
 
   
@@ -408,6 +415,15 @@ server <- function(input, output, session) {
     get(input$dataset, Pattern1_list)
   })
   
+  output$download <- downloadHandler(
+    filename = function() {
+      paste0(input$dataset, ".csv")
+    },
+    content = function(file) {
+      write.csv(dataset(), file)
+    }
+  )
+  
   output$summary <- renderPrint({
     # Use a reactive expression by calling it like a function
     summary(dataset())
@@ -416,6 +432,8 @@ server <- function(input, output, session) {
   output$table <- renderTable({
     dataset()
   })
+
+  
 }
 
 shinyApp(ui, server)
