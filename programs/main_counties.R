@@ -12,8 +12,6 @@ library(tidycensus)
 
 #Directories
 setwd("/gpfs/gibbs/project/sarin/ds3228/Repositories/soi_tax_stats")
-state_inflows <- "data/state_to_state_inflows"
-state_outflows <- "data/state_to_state_outflows"
 county_inflows <- "data/county_to_county_inflows"
 county_outflows <- "data/county_to_county_outflows"
 
@@ -40,7 +38,7 @@ county_outflows <- "data/county_to_county_outflows"
 # the destination sate, in year two, from the origin state.
 #The number of individuals and AGI are based on the year 2 tax return.
 #y2_statefips: State FIPS Code of Destination from Year 2
-#y1_statefips: State FIPS Code of Origin from Year 1
+#y1_statefips: State FIPS Code of Destination from Year 1
 #y1_state: State abbreviation or postal code of origin from year 1
 #y1_state_name: State name of origin from year 1
 #n1: Number of returns
@@ -48,12 +46,12 @@ county_outflows <- "data/county_to_county_outflows"
 #AGI: Adjusted Gross Income (AGI)
 
 #Okay, let's pull in all State Inflows files
-st_inflow_files <- as.data.frame(list.files(file.path(getwd(), state_inflows)))
+st_inflow_files <- as.data.frame(list.files(file.path(getwd(), county_inflows)))
 colnames(st_inflow_files) <- "csv_names"
 
 #We have all csvs listed, let's open them and attach a year to each
 for (csv in 1:nrow(st_inflow_files)) {
-  csv_file <- read.csv(file.path(file.path(getwd(), state_inflows), st_inflow_files$csv_names[csv]))
+  csv_file <- read.csv(file.path(file.path(getwd(), county_inflows), st_inflow_files$csv_names[csv]))
   #Will need this column name specified for future merge
   colnames(csv_file)<- paste(colnames(csv_file), "inflow", sep = "_")
   csv_file$year <- substring(st_inflow_files$csv_names[csv], 12, 15)
@@ -74,12 +72,12 @@ for (csv in 1:nrow(st_inflow_files)) {
 #AGI: Adjusted Gross Income (AGI)
 
 #Okay, let's pull in all State Inflows files
-st_outflow_files <- as.data.frame(list.files(file.path(getwd(), state_outflows)))
+st_outflow_files <- as.data.frame(list.files(file.path(getwd(), county_outflows)))
 colnames(st_outflow_files) <- "csv_names"
 
 #We have all csvs listed, let's open them and attach a year to each
 for (csv in 1:nrow(st_outflow_files)) {
-  csv_file <- read.csv(file.path(file.path(getwd(), state_outflows), st_outflow_files$csv_names[csv]))
+  csv_file <- read.csv(file.path(file.path(getwd(), county_outflows), st_outflow_files$csv_names[csv]))
   #Will need this column name specified for future merge
   colnames(csv_file) <- paste(colnames(csv_file), "outflow", sep = "_")
   csv_file$net_y2_y1 <- paste0(csv_file$y1_statefips, "-", csv_file$y2_statefips)
@@ -174,7 +172,7 @@ for(m in 1:length(Pattern1_list)){
     mutate_if(is.numeric, funs(. * -1))
   df_list <- cbind(df_list, total_flows = rowSums(df_list[,-c(1)]))
   df_list <- df_list[order(df_list$state_name_y1), ]
-    #df_list <- rbind(df_list, total_flows = colSums(df_list[,-c(1)]))
+  #df_list <- rbind(df_list, total_flows = colSums(df_list[,-c(1)]))
   assign(paste0(Pattern1[m], "_net_number_of_individuals"), df_list)
   writexl::write_xlsx(df_list, paste0("/gpfs/gibbs/project/sarin/ds3228/Repositories/soi_tax_stats/output/net_number_of_individuals/",paste0(Pattern1[m], "_net_number_of_individuals.xlsx")))
   
@@ -248,7 +246,7 @@ for(m in 1:length(Pattern1_list)){
 # 
 # #We have all csvs listed, let's open them and attach a year to each
 # for (csv in 1:nrow(st_outflow_files)) {
-#   csv_file <- read.csv(file.path(file.path(getwd(), state_outflows), st_outflow_files$csv_names[csv]))
+#   csv_file <- read.csv(file.path(file.path(getwd(), county_outflows), st_outflow_files$csv_names[csv]))
 #   #Will need this column name specified for future merge
 #   colnames(csv_file) <- paste(colnames(csv_file), "outflow", sep = "_")
 #   csv_file$net_y2_y1 <- paste0(csv_file$y1_statefips, "-", csv_file$y2_statefips)
@@ -404,11 +402,11 @@ ui <- fluidPage(
   downloadButton("download"),
   verbatimTextOutput("summary"),
   tableOutput("table"),
-
+  
   
 )
 
-  
+
 server <- function(input, output, session) {
   # Create a reactive expression
   dataset <- reactive({
@@ -432,9 +430,9 @@ server <- function(input, output, session) {
   output$table <- renderTable({
     dataset()
   })
-
+  
   
 }
 
 shinyApp(ui, server)
-  
+
