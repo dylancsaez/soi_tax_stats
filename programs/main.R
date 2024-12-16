@@ -173,7 +173,8 @@ for(m in 1:length(Pattern1_list)){
   df_list <- df_list %>% 
     mutate_if(is.numeric, funs(. * -1))
   df_list <- cbind(df_list, total_flows = rowSums(df_list[,-c(1)]))
-  #df_list <- rbind(df_list, total_flows = colSums(df_list[,-c(1)]))
+  df_list <- df_list[order(df_list$state_name_y1), ]
+    #df_list <- rbind(df_list, total_flows = colSums(df_list[,-c(1)]))
   assign(paste0(Pattern1[m], "_net_number_of_individuals"), df_list)
   writexl::write_xlsx(df_list, paste0("/gpfs/gibbs/project/sarin/ds3228/Repositories/soi_tax_stats/output/net_number_of_individuals/",paste0(Pattern1[m], "_net_number_of_individuals.xlsx")))
   
@@ -189,6 +190,7 @@ for(m in 1:length(Pattern1_list)){
   df_list <- df_list %>% 
     mutate_if(is.numeric, funs(. * -1))
   df_list <- cbind(df_list, total_flows = rowSums(df_list[,-c(1)]))
+  df_list <- df_list[order(df_list$state_name_y1), ]
   #df_list <- rbind(df_list, total_flows = colSums(df_list[,-c(1)]))
   assign(paste0(Pattern1[m], "_net_AGI"), df_list)
   writexl::write_xlsx(df_list, paste0("/gpfs/gibbs/project/sarin/ds3228/Repositories/soi_tax_stats/output/net_AGI/",paste0(Pattern1[m], "_net_AGI.xlsx")))
@@ -205,6 +207,7 @@ for(m in 1:length(Pattern1_list)){
   df_list <- df_list %>% 
     mutate_if(is.numeric, funs(. * -1))
   df_list <- cbind(df_list, total_flows = rowSums(df_list[,-c(1)]))
+  df_list <- df_list[order(df_list$state_name_y1), ]
   #df_list <- rbind(df_list, total_flows = colSums(df_list[,-c(1)]))
   assign(paste0(Pattern1[m], "_net_number_of_returns"), df_list)
   writexl::write_xlsx(df_list, paste0("/gpfs/gibbs/project/sarin/ds3228/Repositories/soi_tax_stats/output/net_number_of_returns/",paste0(Pattern1[m], "_net_number_of_returns.xlsx")))
@@ -381,3 +384,39 @@ for(m in 1:length(Pattern1_list)){
 # 
 # 
 # 
+#Author: Dylan Saez
+#Purpose: SOI UI
+library(shiny)
+library(shinyMatrix)
+library(DT)
+
+
+Pattern1<-grep("net_AGI",names(.GlobalEnv),value=TRUE)
+Pattern1_list<-do.call("list",mget(Pattern1))
+
+
+ui <- fluidPage(
+  selectInput("dataset", label = "Dataset", choices = ls(Pattern1_list)),
+  verbatimTextOutput("summary"),
+  tableOutput("table")
+)
+
+  
+server <- function(input, output, session) {
+  # Create a reactive expression
+  dataset <- reactive({
+    get(input$dataset, Pattern1_list)
+  })
+  
+  output$summary <- renderPrint({
+    # Use a reactive expression by calling it like a function
+    summary(dataset())
+  })
+  
+  output$table <- renderTable({
+    dataset()
+  })
+}
+
+shinyApp(ui, server)
+  

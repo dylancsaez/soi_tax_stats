@@ -1,36 +1,31 @@
-#Author: Dylan Saez
-#Purpose: SOI UI
-rm(list = ls())
-#Install packages
-library(tidyverse)
-library(data.table)
-library(magrittr)
-library(yaml)
-library(rlang)
-library(ggtext)
-library(tidycensus)
-library(magrittr)
-library(rvest)
 library(shiny)
-library(sf)
-library(leaflet)
+library(shinyMatrix)
 
-#Directories
-setwd("/gpfs/gibbs/project/sarin/ds3228/Repositories/soi_tax_stats")
-
-ui = fluidPage(
-  
-  titlePanel("Net Flows - Individuals Returns"),
-  
-  sidebarLayout(
-    
-    sidebarPanel = sidebarPanel(),
-    mainPanel = mainPanel()
-    
+ui <- fluidPage(
+  titlePanel("shinyMatrix: Simple App"),
+  sidebarPanel(
+    width = 6,
+    numericInput("rows", "Number of rows:", "", min = 2, max = 100),
+    numericInput("columns", "Number of columns:", "", min = 2, max = 100),
+  ),
+  mainPanel(
+    matrixInput("matrix1",
+                value = matrix(NA, 2,2),
+                rows = list(
+                  names = TRUE,
+                  editableNames = TRUE),
+                cols = list(
+                  names = TRUE,
+                  editableNames = TRUE
+                ),
+                class = "numeric"),
+    width = 6,
   )
-  
 )
 
-server = function(input, output){}
-
-shinyApp(ui, server)
+server <- function(input, output, session) {
+  observe({
+    m <- matrix(0, nrow = input$rows, ncol = input$columns)
+    updateMatrixInput(session, "matrix1", m)
+  })
+}
